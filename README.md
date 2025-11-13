@@ -82,10 +82,57 @@ endmodule
 
 # ROM
  // write verilog code for ROM using $random
- 
+ ```
+
+module rom(
+    input clk,
+    input rst,
+    input [9:0] address,
+    output reg [7:0] dataout
+);
+
+    reg [7:0] mem_1kb_rom [1023:0];
+    integer i;
+
+    initial begin
+        for (i = 0; i < 1024; i = i + 1)
+            mem_1kb_rom[i] = $random;
+    end
+
+    always @(posedge clk) begin
+        if (rst)
+            dataout <= 8'b0;
+        else
+            dataout <= mem_1kb_rom[address];
+    end
+
+endmodule
+```
  // Test bench
+ ```
+module romtb;
+    reg clk_t, rst_t;
+    reg [9:0] address_t;
+    wire [7:0] dataout_t;
+
+    rom dut(.clk(clk_t), .rst(rst_t), .address(address_t), .dataout(dataout_t));
+
+    initial begin
+        clk_t = 1'b0;
+        rst_t = 1'b1;
+        #100 rst_t = 1'b0;
+        address_t = 10'd700;
+        #100 address_t = 10'd800;
+        #100 address_t = 10'd900;
+    end
+
+    always #10 clk_t = ~clk_t;
+
+endmodule
+```
 
 // output Waveform
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/b2ef58ea-a53d-47a6-9076-2ce2a045b721" />
 
  # FIFO
  // write verilog code for FIFO
