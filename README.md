@@ -136,10 +136,92 @@ endmodule
 
  # FIFO
  // write verilog code for FIFO
- 
- // Test bench
+ ```
 
+module fifo #(parameter DEPTH = 8, DATA_WIDTH = 8) (
+    input clk,
+    input rst_n,
+    input w_en,
+    input r_en,
+    input [DATA_WIDTH-1:0] data_in,
+    output reg [DATA_WIDTH-1:0] data_out,
+    output full,
+    output empty
+);
+
+    reg [$clog2(DEPTH)-1:0] w_ptr, r_ptr;
+    reg [DATA_WIDTH-1:0] fifo [DEPTH-1:0];
+
+    always @(posedge clk) begin
+        if (!rst_n) begin
+            w_ptr <= 0;
+            r_ptr <= 0;
+            data_out <= 0;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (w_en & !full) begin
+            fifo[w_ptr] <= data_in;
+            w_ptr <= w_ptr + 1;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (r_en & !empty) begin
+            data_out <= fifo[r_ptr];
+            r_ptr <= r_ptr + 1;
+        end
+    end
+
+    assign full  = ((w_ptr + 1'b1) == r_ptr);
+    assign empty = (w_ptr == r_ptr);
+
+endmodule
+```
+// Test bench
+```
+module fifotb;
+    reg clk_t, rst_t;
+    reg w_en_t, r_en_t;
+    reg [7:0] data_in_t;
+    wire [7:0] data_out_t;
+    wire full_t, empty_t;
+
+    fifo dut (
+        .clk(clk_t),
+        .rst_n(rst_t),
+        .w_en(w_en_t),
+        .r_en(r_en_t),
+        .data_in(data_in_t),
+        .data_out(data_out_t),
+        .full(full_t),
+        .empty(empty_t)
+    );
+
+    always #10 clk_t = ~clk_t;
+
+    initial begin
+        clk_t = 1'b0;
+        rst_t = 1'b0;
+        w_en_t = 1'b0;
+        r_en_t = 1'b0;
+        data_in_t = 8'd0;
+
+        #50 rst_t = 1'b1;
+        #20 w_en_t = 1'b1; data_in_t = 8'd10;
+        #20 data_in_t = 8'd20;
+        #20 data_in_t = 8'd30;
+        #20 data_in_t = 8'd40;
+        #20 w_en_t = 1'b0;
+        #40 r_en_t = 1'b1;
+        #100 r_en_t = 1'b0;
+    end
+
+endmodule
+```
 // output Waveform
+<img width="1918" height="1079" alt="image" src="https://github.com/user-attachments/assets/ca6b40ce-ffca-4fc2-9d78-7f5b53f7584e" />
 
 
 
